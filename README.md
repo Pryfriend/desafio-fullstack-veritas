@@ -18,5 +18,4 @@ Certifique-se de ter o **Go** e o **Node.js** instalados em sua máquina.
 
 ### 1. Clonar o Repositório
 ```bash
-git clone [https://github.com/SEU_USUARIO/mini-kanban.git](https://github.com/pryfriend/mini-kanban.git)
-cd mini-kanban
+git clone [https://github.com/SEU_USUARIO/mini-kanban.git](https://github.com/Pryfriend/desafio-fullstack-veritas.git)
