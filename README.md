@@ -1,4 +1,4 @@
-# Mini Kanban - Fullstack Application
+# desafio-fullstack-veritas - Fullstack Application
 
 Uma aplicação de gerenciamento de tarefas no estilo Kanban, desenvolvida com **React** no frontend, **Go (Golang)** no backend e suporte a armazenamento local offline (Fallback via `localStorage`).
 
