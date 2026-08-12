@@ -7,96 +7,99 @@ import (
 	"strings"
 )
 
-// Banco de dados em memória temporário para o Mini Kanban
-var tarefas = []Tarefa{
-	{ID: 1, Titulo: "Configurar Go API", Descricao: "Subir servidor REST na porta 8080", Status: "todo"},
-}
-
-// GetTarefas lida com GET /tarefas (Retorna todas as tarefas)
-func GetTarefas(w http.ResponseWriter, r *http.Request) {
+// Listar e Criar (/tasks e /tasks/)
+func taskHandler(w http.ResponseWriter, r *http.Request) {
+	// Configurar CORS
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(tarefas)
-}
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-// CreateTarefa lida com POST /tarefas (Cria uma nova tarefa)
-func CreateTarefa(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	var novaTarefa Tarefa
-	if err := json.NewDecoder(r.Body).Decode(&novaTarefa); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	novaTarefa.ID = len(tarefas) + 1
-	tarefas = append(tarefas, novaTarefa)
+	path := r.URL.Path
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(novaTarefa)
-}
-
-// UpdateTarefa lida com PUT /tarefas/{id} (Atualiza uma tarefa existente)
-func UpdateTarefa(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 3 {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+	// GET /tasks
+	if r.Method == http.MethodGet && (path == "/tasks" || path == "/tasks/") {
+		json.NewEncoder(w).Encode(tarefas)
 		return
 	}
 
-	id, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+	// POST /tasks
+	if r.Method == http.MethodPost && (path == "/tasks" || path == "/tasks/") {
+		var nova Tarefa
+		err := json.NewDecoder(r.Body).Decode(&nova)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		nova.ID = len(tarefas) + 1
+		if nova.Status == "" {
+			nova.Status = "todo"
+		}
+		tarefas = append(tarefas, nova)
+		saveToFile()
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(nova)
 		return
 	}
 
-	var tarefaAtualizada Tarefa
-	if err := json.NewDecoder(r.Body).Decode(&tarefaAtualizada); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// Rotas com ID (/tasks/{id})
+	if strings.HasPrefix(path, "/tasks/") {
+		parts := strings.Split(path, "/")
+		if len(parts) < 3 {
+			http.NotFound(w, r)
+			return
+		}
 
-	for i, t := range tarefas {
-		if t.ID == id {
-			tarefaAtualizada.ID = id
-			tarefas[i] = tarefaAtualizada
-			json.NewEncoder(w).Encode(tarefaAtualizada)
+		idStr := parts[2]
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "ID inválido", http.StatusBadRequest)
+			return
+		}
+
+		idx := -1
+		for i, t := range tarefas {
+			if t.ID == id {
+				idx = i
+				break
+			}
+		}
+
+		if idx == -1 {
+			http.NotFound(w, r)
+			return
+		}
+
+		// PUT /tasks/{id} (Atualizar)
+		if r.Method == http.MethodPut {
+			var atualizada Tarefa
+			err := json.NewDecoder(r.Body).Decode(&atualizada)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			atualizada.ID = id
+			tarefas[idx] = atualizada
+			saveToFile()
+			json.NewEncoder(w).Encode(atualizada)
+			return
+		}
+
+		// DELETE /tasks/{id} (Deletar)
+		if r.Method == http.MethodDelete {
+			tarefas = append(tarefas[:idx], tarefas[idx+1:]...)
+			saveToFile()
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 	}
 
-	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
-}
-
-// DeleteTarefa lida com DELETE /tarefas/{id} (Remove uma tarefa)
-func DeleteTarefa(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 3 {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
-		return
-	}
-
-	id, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
-		return
-	}
-
-	for i, t := range tarefas {
-		if t.ID == id {
-			tarefas = append(tarefas[:i], tarefas[i+1:]...)
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{"mensagem": "Tarefa removida com sucesso"})
-			return
-		}
-	}
-
-	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+	http.NotFound(w, r)
 }
