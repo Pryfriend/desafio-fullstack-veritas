@@ -108,7 +108,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
-        Mini Kanban
+        Desafio-Fullstack-Veritas
       </h1>
 
       {erroApi && (
