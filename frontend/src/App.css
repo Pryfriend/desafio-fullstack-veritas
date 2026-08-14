@@ -82,13 +82,13 @@
   text-align: left;
 }
 
-#next-steps > div {
+#next-steps>div {
   flex: 1 1 0;
   padding: 32px;
 }
 
 @media (max-width: 1024px) {
-  #next-steps > div {
+  #next-steps>div {
     padding: 24px 20px;
   }
 }
