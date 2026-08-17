@@ -36,8 +36,9 @@ export function KanbanColumn({ titulo, statusKey, corTexto, corBadge, tarefas, m
                       <p className="text-gray-400 text-sm mt-1 mb-4">{tarefa.descricao}</p>
                     )}
 
-                    {/* Botões com o design idêntico ao original */}
-                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                    {/* Container dos botões */}
+                    <div className="flex items-center justify-between gap-2 mt-4">
+                      {/* Botão da Esquerda (Voltar / Reabrir) */}
                       {tarefa.status === 'doing' && (
                         <button
                           onClick={(e) => {
@@ -62,6 +63,7 @@ export function KanbanColumn({ titulo, statusKey, corTexto, corBadge, tarefas, m
                         </button>
                       )}
 
+                      {/* Botão Progresso (A Fazer) fica à esquerda, Concluir (Em Progresso) fica ao meio */}
                       {tarefa.status === 'todo' && (
                         <button
                           onClick={(e) => {
@@ -80,18 +82,21 @@ export function KanbanColumn({ titulo, statusKey, corTexto, corBadge, tarefas, m
                             e.stopPropagation();
                             mudarStatus(tarefa.id, 'done');
                           }}
-                          className="bg-green-600 hover:bg-green-500 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors"
+                          className="bg-green-600 hover:bg-green-500 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors mx-auto"
                         >
                           Concluir →
                         </button>
                       )}
 
+                      {/* Botão da Direita (Excluir) */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           deletarTarefa(tarefa.id);
                         }}
-                        className="bg-red-600 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors ml-auto"
+                        className={`bg-red-600 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors ${
+                          tarefa.status === 'done' ? 'ml-auto' : ''
+                        }`}
                       >
                         Excluir
                       </button>
