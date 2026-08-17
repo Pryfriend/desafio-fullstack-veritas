@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DragDropContext } from '@hello-pangea/dnd';
 import './App.css';
 import { getTasks, createTask, updateTask, deleteTask as apiDeleteTask } from './services/api';
 import { TaskForm } from './components/TaskForm';
@@ -69,50 +70,70 @@ function App() {
       });
   };
 
+  const onDragEnd = (result) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const novoStatus = destination.droppableId;
+    const idTarefa = isNaN(draggableId) ? draggableId : Number(draggableId);
+
+    mudarStatus(idTarefa, novoStatus);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6">
-      <h1 className="text-2xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent px-2">
-        Desafio-Fullstack-Veritas
-      </h1>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent px-2">
+          Desafio-Fullstack-Veritas
+        </h1>
 
-      {erroApi && (
-        <div className="bg-yellow-600/20 border border-yellow-500 text-yellow-300 px-3 py-2 rounded text-xs sm:text-sm text-center mb-6 max-w-xl mx-auto">
-          ⚠️ {erroApi}
+        {erroApi && (
+          <div className="bg-yellow-600/20 border border-yellow-500 text-yellow-300 px-3 py-2 rounded text-xs sm:text-sm text-center mb-6 max-w-xl mx-auto">
+            ⚠️ {erroApi}
+          </div>
+        )}
+
+        <TaskForm onSubmit={adicionarTarefa} />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+          <KanbanColumn 
+            titulo="A Fazer" 
+            statusKey="todo" 
+            corTexto="text-blue-400" 
+            corBadge="bg-blue-600" 
+            tarefas={tarefas} 
+            mudarStatus={mudarStatus} 
+            deletarTarefa={deletarTarefa} 
+          />
+          <KanbanColumn 
+            titulo="Em Progresso" 
+            statusKey="doing" 
+            corTexto="text-yellow-400" 
+            corBadge="bg-yellow-600" 
+            tarefas={tarefas} 
+            mudarStatus={mudarStatus} 
+            deletarTarefa={deletarTarefa} 
+          />
+          <KanbanColumn 
+            titulo="Concluídas" 
+            statusKey="done" 
+            corTexto="text-green-400" 
+            corBadge="bg-green-600" 
+            tarefas={tarefas} 
+            mudarStatus={mudarStatus} 
+            deletarTarefa={deletarTarefa} 
+          />
         </div>
-      )}
-
-      <TaskForm onSubmit={adicionarTarefa} />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
-        <KanbanColumn 
-          titulo="A Fazer" 
-          statusKey="todo" 
-          corTexto="text-blue-400" 
-          corBadge="bg-blue-600" 
-          tarefas={tarefas} 
-          mudarStatus={mudarStatus} 
-          deletarTarefa={deletarTarefa} 
-        />
-        <KanbanColumn 
-          titulo="Em Progresso" 
-          statusKey="doing" 
-          corTexto="text-yellow-400" 
-          corBadge="bg-yellow-600" 
-          tarefas={tarefas} 
-          mudarStatus={mudarStatus} 
-          deletarTarefa={deletarTarefa} 
-        />
-        <KanbanColumn 
-          titulo="Concluídas" 
-          statusKey="done" 
-          corTexto="text-green-400" 
-          corBadge="bg-green-600" 
-          tarefas={tarefas} 
-          mudarStatus={mudarStatus} 
-          deletarTarefa={deletarTarefa} 
-        />
       </div>
-    </div>
+    </DragDropContext>
   );
 }
 
